@@ -278,31 +278,33 @@ public:
 			}
 			spiderPaths.at(current).update(frametime);
 			spidPos = spiderPaths.at(current).getPosition();
-			if (current == 1) {
+
+
+			if (current == 1) {		//rotate spider onto hand
 				spiderRots.at(0).update(frametime);
 				xspidRot = spiderRots.at(0).getPosition().x;
 			}
-			else if (current == 6) {
+			else if (current == 6) {	//rotate spider for fall
 				spiderRots.at(1).update(frametime);
 				xspidRot = spiderRots.at(1).getPosition().x;
 			}
-			else if (current == 7) {
+			else if (current == 7) {	//set spider rotations for upside down eye merge
 				xspidRot = 0;
 				yspidRot = -M_PI_2;
 				zspidRot = M_PI;
 			}
 
-			if (current == 3 || current == 4 || current == 5) {
+			if (current == 3 || current == 4 || current == 5) {	//zoom the hand appropriately
 				handPos = vec3(0, -0.3, -4);
 			}
-			else if (current == 6) {
+			else if (current == 6) {		//zoom the hand for the bite
 				handPos = vec3(0, -0.3, -7.5);
 				handRots.at(0).update(frametime);
 				xhandRot = handRots.at(0).getPosition().x;
 			}
 
             // draw mesh
-			if (current < 7) {
+			if (current < 7) {		//only render the hand when necessary
 				Model->pushMatrix();
 				Model->loadIdentity();
 				//"global" translate
