@@ -92,6 +92,16 @@ public:
 	//spider
 	vector<shared_ptr<Shape>> spider;
 
+	// 8 Eyes
+	vector<shared_ptr<Shape>> eye1;
+	vector<shared_ptr<Shape>> eye2;
+	vector<shared_ptr<Shape>> eye3;
+	vector<shared_ptr<Shape>> eye4;
+	vector<shared_ptr<Shape>> eye5;
+	vector<shared_ptr<Shape>> eye6;
+	vector<shared_ptr<Shape>> eye7;
+	vector<shared_ptr<Shape>> eye8;
+
 	// spline vectors for "animation"
 	vector<Spline> spiderPaths;
 	vector<Spline> spiderRots;
@@ -99,7 +109,15 @@ public:
 
 	//position vectors
 	glm::vec3 handPos = vec3(0, -0.3, -5);
-	glm::vec3 spiderHeadPos = vec3(0, -0.3, -5);
+	glm::vec3 spiderHeadPos = vec3(0, -0.3, -6);
+	glm::vec3 eye1Pos = vec3(-1, 1, -3.5);
+	glm::vec3 eye2Pos = vec3(-1/3., 1, -3.5);
+	glm::vec3 eye3Pos = vec3(1/3., 1, -3.5);
+	glm::vec3 eye4Pos = vec3(1, 1, -3.5);
+	glm::vec3 eye5Pos = vec3(-1, 0, -3.5);
+	glm::vec3 eye6Pos = vec3(-1/3., 0, -3.5);
+	glm::vec3 eye7Pos = vec3(1/3., 0, -3.5);
+	glm::vec3 eye8Pos = vec3(1, 0, -3.5);
 
 	//rotations of spider
 	float xspidRot = 0;				//X-axis
@@ -201,7 +219,14 @@ public:
 		loadMultiPartObject(resourceDirectory + "/models/spider_low_quality.obj", &spider);
 		loadMultiPartObject(resourceDirectory + "/models/hand_low_quality.obj", &hand);
 		loadMultiPartObject(resourceDirectory + "/models/sphere.obj", &spiderHead);
-
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye1);
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye2);
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye3);
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye4);
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye5);
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye6);
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye7);
+		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye8);
 
 		//read out information stored in the shape about its size - something like this...
 		//then do something with that information.....
@@ -319,17 +344,84 @@ public:
 				Model->popMatrix();
 			}
 			
+			// When the zooming to the spider is done. Show the frame where only the spiderHead is shown
 			if (spiderPaths.at(7).isDone()) {
 				// spider's head
 				Model->pushMatrix();
 					Model->loadIdentity();
 					Model->translate(spiderHeadPos);	// "Translate" in one place
-					Model->scale(2);
+					Model->scale(1.80);
 					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 					drawMultiPartObject(&spiderHead, &simple);
 				Model->popMatrix();	
+
+				// 8 eyes
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye1Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye1, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye2Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye2, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye3Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye4Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye4, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye5Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye5, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye6Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye6, &simple);
+				Model->popMatrix();
+
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye7Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye7, &simple);
+				Model->popMatrix();
+
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye8Pos);
+					Model->scale(0.1);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye8, &simple);
+				Model->popMatrix();
 			}
 
+			// The spider should be shown in most frame. Except after the zoom into the spider. 
 			else {
 				// spider
 				Model->pushMatrix();
