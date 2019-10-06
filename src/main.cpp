@@ -75,13 +75,16 @@ public:
 
 	WindowManager * windowManager = nullptr;
     
-  ShaderManager * shaderManager;
+  	ShaderManager * shaderManager;
 
 	// Shape to be used (from  file) - modify to support multiple
 	shared_ptr<Shape> sphere;
 	shared_ptr<Shape> cube;
 
 	vector<shared_ptr<PhysicsObject>> physicsObjects;
+
+	// Spider's head
+	vector<shared_ptr<Shape>> spiderHead;
 
 	//hand
 	vector<shared_ptr<Shape>> hand;
@@ -96,6 +99,7 @@ public:
 
 	//position vectors
 	glm::vec3 handPos = vec3(0, -0.3, -5);
+	glm::vec3 spiderHeadPos = vec3(0, -0.3, -5);
 
 	//rotations of spider
 	float xspidRot = 0;				//X-axis
@@ -196,6 +200,7 @@ public:
 		//loadMultiPartObject(resourceDirectory + "/models/hand_low_quality.obj", &hand);
 		loadMultiPartObject(resourceDirectory + "/models/spider_low_quality.obj", &spider);
 		loadMultiPartObject(resourceDirectory + "/models/hand_low_quality.obj", &hand);
+		loadMultiPartObject(resourceDirectory + "/models/sphere.obj", &spiderHead);
 
 
 		//read out information stored in the shape about its size - something like this...
@@ -223,8 +228,6 @@ public:
 		spiderRots.push_back(Spline(glm::vec3(-M_PI_2, 0, 0), glm::vec3(0, 0, 0), glm::vec3(M_PI_2, 0, 0), 1));
 		//slow "zoom" in
 		spiderPaths.push_back(Spline(glm::vec3(0, -0.25, -1), glm::vec3(0, -0.125, -0.625), glm::vec3(0, 0, -0.3), 2.5));
-
-
 		//rotate hand for spider fall
 		handRots.push_back(Spline(glm::vec3(M_PI_4/2, 0, 0), glm::vec3(M_PI_4, 0, 0), glm::vec3((M_PI_4/2)+M_PI_2, 0, 0), 1));
 	}
@@ -245,8 +248,7 @@ public:
         View->popMatrix();
     }
 
-	void render(float frametime)
-	{
+	void render(float frametime) {
 		// Get current frame buffer size.
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -278,7 +280,6 @@ public:
 			}
 			spiderPaths.at(current).update(frametime);
 			spidPos = spiderPaths.at(current).getPosition();
-
 
 			if (current == 1) {		//rotate spider onto hand
 				spiderRots.at(0).update(frametime);
@@ -317,19 +318,33 @@ public:
 				drawMultiPartObject(&hand, &simple);
 				Model->popMatrix();
 			}
-            // spider
-            Model->pushMatrix();
-                Model->loadIdentity();
-                //Model->translate(vec3(0, 0, -1));
-				Model->translate(spidPos);			//move
-                Model->scale(0.05);					//size
-				Model->rotate(xspidRot, XAXIS);		//rotate along X
-                Model->rotate(yspidRot, YAXIS);		//rotate along Y
-				Model->rotate(zspidRot, ZAXIS);		//rotate along Z
-                //spider.draw(simple, Model);
-				glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
-				drawMultiPartObject(&spider, &simple);
-            Model->popMatrix();
+			
+			if (spiderPaths.at(7).isDone()) {
+				// spider's head
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(spiderHeadPos);	// "Translate" in one place
+					Model->scale(2);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&spiderHead, &simple);
+				Model->popMatrix();	
+			}
+
+			else {
+				// spider
+				Model->pushMatrix();
+					Model->loadIdentity();
+					//Model->translate(vec3(0, 0, -1));
+					Model->translate(spidPos);			//move
+					Model->scale(0.05);					//size
+					Model->rotate(xspidRot, XAXIS);		//rotate along X
+					Model->rotate(yspidRot, YAXIS);		//rotate along Y
+					Model->rotate(zspidRot, ZAXIS);		//rotate along Z
+					//spider.draw(simple, Model);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&spider, &simple);
+				Model->popMatrix();
+			}
 
 			for (auto obj : physicsObjects) {
 				obj->draw(simple, Model);
