@@ -170,7 +170,7 @@ public:
 		GLSL::checkVersion();
 
 		// Set background color.
-		glClearColor(.12f, .34f, .56f, 1.0f);
+		glClearColor(0.5,0.2,0.2, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);
 
@@ -210,19 +210,24 @@ public:
 			(*object)[i]->draw(*program);
 	}
 
+	void initTextures(const std::string& resourceDirectory)
+	{
+
+	}
+
 	void initGeom(const std::string& resourceDirectory)
 	{
 		//loadMultiPartObject(resourceDirectory + "/models/hand_low_quality.obj", &hand);
 		loadMultiPartObject(resourceDirectory + "/models/spider_low_quality.obj", &spider);
 		loadMultiPartObject(resourceDirectory + "/models/hand_low_quality.obj", &hand);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye1);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye2);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye3);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye4);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye5);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye6);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye7);
-		loadMultiPartObject(resourceDirectory + "/models/SmoothSphere.obj", &eye8);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye1);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye2);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye3);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye4);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye5);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye6);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye7);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye8);
 
 		//read out information stored in the shape about its size - something like this...
 		//then do something with that information.....
@@ -290,14 +295,16 @@ public:
 	}
     
     void renderSimpleProg(float frametime) {
-        shared_ptr<Program> simple = shaderManager->getCurrentShader();
+		shared_ptr<Program> spiderProg;
+		shared_ptr<Program> eyeProg;
+		shared_ptr<Program> handProg;
 
         auto Model = make_shared<MatrixStack>();
 
-        simple->bind();
-            // Apply perspective projection.
-            SetProjectionMatrix(simple);
-            SetViewMatrix(simple);
+		shaderManager->setCurrentShader(HANDPROG);
+		auto simple = shaderManager->getCurrentShader();
+
+        	
 
 			// Demo of Bezier Spline
 			glm::vec3 spidPos;
@@ -344,8 +351,14 @@ public:
 				Model->rotate(yhandRot, YAXIS);
 				Model->rotate(zhandRot, ZAXIS);
 				Model->scale(vec3(0.5, 0.5, 0.5));
+				shaderManager->setCurrentShader(HANDPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
 				glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				drawMultiPartObject(&hand, &simple);
+				simple->unbind();
 				Model->popMatrix();
 			}
 			
@@ -362,6 +375,11 @@ public:
 				eye8Pos = eyePaths.at(5).getPosition();					
 				
 				// 8 eyes
+				shaderManager->setCurrentShader(PUPILPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
 				Model->pushMatrix();
 					Model->loadIdentity();
 					Model->translate(eye1Pos);
@@ -425,6 +443,7 @@ public:
 					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 					drawMultiPartObject(&eye8, &simple);
 				Model->popMatrix();
+				simple->unbind();
 			}
 
 			// After the eyes merged together, we have 2 big eyes (eye2 + eye 3)
@@ -432,6 +451,11 @@ public:
 				glm::vec3 eye3Pos = vec3(0.008, 0.01, -0.2);
 				glm::vec3 eye2Pos = vec3(-0.008, 0.01, -0.2);
 				
+				shaderManager->setCurrentShader(EYEPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
 				Model->pushMatrix();
 					Model->loadIdentity();
 					Model->translate(eye2Pos);
@@ -447,9 +471,39 @@ public:
 					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 					drawMultiPartObject(&eye3, &simple);
 				Model->popMatrix();
+				simple->unbind();
+
+				// draw pupils
+				shaderManager->setCurrentShader(PUPILPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
+
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(vec3(0.008, 0.01, -0.15));
+					Model->scale(0.002);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(vec3(-0.008, 0.01, -0.15));
+					Model->scale(0.002);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+				simple->unbind();
+
 			}
 
 			// The spider should be shown in all frames
+			shaderManager->setCurrentShader(SPIDERPROG);
+			simple = shaderManager->getCurrentShader();
+			simple->bind();
+	        SetProjectionMatrix(simple);
+         	SetViewMatrix(simple);
 			Model->pushMatrix();
 				Model->loadIdentity();
 				//Model->translate(vec3(0, 0, -1));
@@ -462,11 +516,11 @@ public:
 				glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				drawMultiPartObject(&spider, &simple);
 			Model->popMatrix();
+			simple->unbind();
 
 			for (auto obj : physicsObjects) {
 				obj->draw(simple, Model);
 			}
-        simple->unbind();
     }
 
 	void updatePhysics(float dt) {
