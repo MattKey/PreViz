@@ -75,7 +75,7 @@ public:
 
 	WindowManager * windowManager = nullptr;
     
-  ShaderManager * shaderManager;
+  	ShaderManager * shaderManager;
 
 	// Shape to be used (from  file) - modify to support multiple
 	shared_ptr<Shape> sphere;
@@ -89,13 +89,32 @@ public:
 	//spider
 	vector<shared_ptr<Shape>> spider;
 
+	// 8 Eyes
+	vector<shared_ptr<Shape>> eye1;
+	vector<shared_ptr<Shape>> eye2;
+	vector<shared_ptr<Shape>> eye3;
+	vector<shared_ptr<Shape>> eye4;
+	vector<shared_ptr<Shape>> eye5;
+	vector<shared_ptr<Shape>> eye6;
+	vector<shared_ptr<Shape>> eye7;
+	vector<shared_ptr<Shape>> eye8;
+
 	// spline vectors for "animation"
 	vector<Spline> spiderPaths;
 	vector<Spline> spiderRots;
 	vector<Spline> handRots;
+	vector<Spline> eyePaths;
 
 	//position vectors
 	glm::vec3 handPos = vec3(0, -0.3, -5);
+	glm::vec3 eye1Pos = vec3(-0.02, 0.01, -0.2);
+	glm::vec3 eye2Pos = vec3(-0.005, 0.01, -0.2);
+	glm::vec3 eye3Pos = vec3(0.005, 0.01, -0.2);
+	glm::vec3 eye4Pos = vec3(0.02, 0.01, -0.2);
+	glm::vec3 eye5Pos = vec3(-0.02, 0, -0.2);
+	glm::vec3 eye6Pos = vec3(-0.01, 0, -0.2);
+	glm::vec3 eye7Pos = vec3(0.01, 0, -0.2);
+	glm::vec3 eye8Pos = vec3(0.02, 0, -0.2);
 
 	//rotations of spider
 	float xspidRot = 0;				//X-axis
@@ -151,7 +170,7 @@ public:
 		GLSL::checkVersion();
 
 		// Set background color.
-		glClearColor(.12f, .34f, .56f, 1.0f);
+		glClearColor(0.5,0.2,0.2, 1.0f);
 		// Enable z-buffer test.
 		glEnable(GL_DEPTH_TEST);
 
@@ -191,12 +210,24 @@ public:
 			(*object)[i]->draw(*program);
 	}
 
+	void initTextures(const std::string& resourceDirectory)
+	{
+
+	}
+
 	void initGeom(const std::string& resourceDirectory)
 	{
 		//loadMultiPartObject(resourceDirectory + "/models/hand_low_quality.obj", &hand);
 		loadMultiPartObject(resourceDirectory + "/models/spider_low_quality.obj", &spider);
 		loadMultiPartObject(resourceDirectory + "/models/hand_low_quality.obj", &hand);
-
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye1);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye2);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye3);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye4);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye5);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye6);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye7);
+		loadMultiPartObject(resourceDirectory + "/models/ico_sphere.obj", &eye8);
 
 		//read out information stored in the shape about its size - something like this...
 		//then do something with that information.....
@@ -223,10 +254,17 @@ public:
 		spiderRots.push_back(Spline(glm::vec3(-M_PI_2, 0, 0), glm::vec3(0, 0, 0), glm::vec3(M_PI_2, 0, 0), 1));
 		//slow "zoom" in
 		spiderPaths.push_back(Spline(glm::vec3(0, -0.25, -1), glm::vec3(0, -0.125, -0.625), glm::vec3(0, 0, -0.3), 2.5));
-
-
 		//rotate hand for spider fall
 		handRots.push_back(Spline(glm::vec3(M_PI_4/2, 0, 0), glm::vec3(M_PI_4, 0, 0), glm::vec3((M_PI_4/2)+M_PI_2, 0, 0), 1));
+	
+		// Eyes 1, 5, 6 move toward eye 2
+		eyePaths.push_back(Spline(eye1Pos, eye2Pos, eye2Pos, 3));
+		eyePaths.push_back(Spline(eye5Pos, eye2Pos, eye2Pos, 3));
+		eyePaths.push_back(Spline(eye6Pos, eye2Pos, eye2Pos, 3));
+		// Eyes 4, 7, 8 move toward eye 3 
+		eyePaths.push_back(Spline(eye4Pos, eye3Pos, eye3Pos, 3));
+		eyePaths.push_back(Spline(eye7Pos, eye3Pos, eye3Pos, 3));
+		eyePaths.push_back(Spline(eye8Pos, eye3Pos, eye3Pos, 3));
 	}
     
     mat4 SetProjectionMatrix(shared_ptr<Program> curShader) {
@@ -245,8 +283,7 @@ public:
         View->popMatrix();
     }
 
-	void render(float frametime)
-	{
+	void render(float frametime) {
 		// Get current frame buffer size.
 		int width, height;
 		glfwGetFramebufferSize(windowManager->getHandle(), &width, &height);
@@ -258,27 +295,28 @@ public:
 	}
     
     void renderSimpleProg(float frametime) {
-        shared_ptr<Program> simple = shaderManager->getCurrentShader();
+		shared_ptr<Program> spiderProg;
+		shared_ptr<Program> eyeProg;
+		shared_ptr<Program> handProg;
 
         auto Model = make_shared<MatrixStack>();
 
-        simple->bind();
-            // Apply perspective projection.
-            SetProjectionMatrix(simple);
-            SetViewMatrix(simple);
+		shaderManager->setCurrentShader(HANDPROG);
+		auto simple = shaderManager->getCurrentShader();
+
+        	
 
 			// Demo of Bezier Spline
 			glm::vec3 spidPos;
 
 			int current = 0;
 			for (int i = 0; i < spiderPaths.size(); i++) {
-				if(spiderPaths.at(i).isDone() && i < spiderPaths.size()-1) {
-					current = i+1;
+				if (spiderPaths.at(i).isDone() && i < spiderPaths.size() - 1) {
+					current = i + 1;
 				}
 			}
 			spiderPaths.at(current).update(frametime);
 			spidPos = spiderPaths.at(current).getPosition();
-
 
 			if (current == 1) {		//rotate spider onto hand
 				spiderRots.at(0).update(frametime);
@@ -313,28 +351,176 @@ public:
 				Model->rotate(yhandRot, YAXIS);
 				Model->rotate(zhandRot, ZAXIS);
 				Model->scale(vec3(0.5, 0.5, 0.5));
+				shaderManager->setCurrentShader(HANDPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
 				glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				drawMultiPartObject(&hand, &simple);
+				simple->unbind();
 				Model->popMatrix();
 			}
-            // spider
-            Model->pushMatrix();
-                Model->loadIdentity();
-                //Model->translate(vec3(0, 0, -1));
+			
+			// When the zooming to the spider is done. Show the frame where the 8 eyes merging
+			if (spiderPaths.at(7).isDone() && !eyePaths.at(5).isDone()) {
+				for (int i = 0; i < eyePaths.size(); i++) {
+					eyePaths.at(i).update(frametime);
+				}
+				eye1Pos = eyePaths.at(0).getPosition();
+				eye4Pos = eyePaths.at(1).getPosition();
+				eye5Pos = eyePaths.at(2).getPosition();
+				eye6Pos = eyePaths.at(3).getPosition();
+				eye7Pos = eyePaths.at(4).getPosition();
+				eye8Pos = eyePaths.at(5).getPosition();					
+				
+				// 8 eyes
+				shaderManager->setCurrentShader(PUPILPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye1Pos);
+					Model->scale(0.0035);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye1, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye2Pos);
+					Model->scale(0.005);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye2, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye3Pos);
+					Model->scale(0.005);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye4Pos);
+					Model->scale(0.0035);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye4, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye5Pos);
+					Model->scale(0.0035);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye5, &simple);
+				Model->popMatrix();
+				
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye6Pos);
+					Model->scale(0.0035);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye6, &simple);
+				Model->popMatrix();
+
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye7Pos);
+					Model->scale(0.0035);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye7, &simple);
+				Model->popMatrix();
+
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye8Pos);
+					Model->scale(0.0035);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye8, &simple);
+				Model->popMatrix();
+				simple->unbind();
+			}
+
+			// After the eyes merged together, we have 2 big eyes (eye2 + eye 3)
+			else if (eyePaths.at(5).isDone()){
+				glm::vec3 eye3Pos = vec3(0.008, 0.01, -0.2);
+				glm::vec3 eye2Pos = vec3(-0.008, 0.01, -0.2);
+				
+				shaderManager->setCurrentShader(EYEPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye2Pos);
+					Model->scale(0.01);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(eye3Pos);
+					Model->scale(0.01);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+				simple->unbind();
+
+				// draw pupils
+				shaderManager->setCurrentShader(PUPILPROG);
+				simple = shaderManager->getCurrentShader();
+				simple->bind();
+	            SetProjectionMatrix(simple);
+         		SetViewMatrix(simple);
+
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(vec3(0.008, 0.01, -0.15));
+					Model->scale(0.002);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+				Model->pushMatrix();
+					Model->loadIdentity();
+					Model->translate(vec3(-0.008, 0.01, -0.15));
+					Model->scale(0.002);
+					glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
+					drawMultiPartObject(&eye3, &simple);
+				Model->popMatrix();
+				simple->unbind();
+
+			}
+
+			// The spider should be shown in all frames
+			shaderManager->setCurrentShader(SPIDERPROG);
+			simple = shaderManager->getCurrentShader();
+			simple->bind();
+	        SetProjectionMatrix(simple);
+         	SetViewMatrix(simple);
+			Model->pushMatrix();
+				Model->loadIdentity();
+				//Model->translate(vec3(0, 0, -1));
 				Model->translate(spidPos);			//move
-                Model->scale(0.05);					//size
+				Model->scale(0.05);					//size
 				Model->rotate(xspidRot, XAXIS);		//rotate along X
-                Model->rotate(yspidRot, YAXIS);		//rotate along Y
+				Model->rotate(yspidRot, YAXIS);		//rotate along Y
 				Model->rotate(zspidRot, ZAXIS);		//rotate along Z
-                //spider.draw(simple, Model);
+				//spider.draw(simple, Model);
 				glUniformMatrix4fv(simple->getUniform("M"), 1, GL_FALSE, value_ptr(Model->topMatrix()));
 				drawMultiPartObject(&spider, &simple);
-            Model->popMatrix();
+			Model->popMatrix();
+			simple->unbind();
 
 			for (auto obj : physicsObjects) {
 				obj->draw(simple, Model);
 			}
-        simple->unbind();
     }
 
 	void updatePhysics(float dt) {

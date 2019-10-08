@@ -34,6 +34,10 @@
 
 #define SIMPLEPROG 0
 #define SIMPLEPROG2 1
+#define SPIDERPROG 3
+#define EYEPROG 4
+#define HANDPROG 5
+#define PUPILPROG 6
 
 #include <memory>
 
@@ -54,6 +58,10 @@ public:
     
     void initShaders();
     shared_ptr<Program> initSimpleProgShader();
+    shared_ptr<Program> initHandProgShader();
+    shared_ptr<Program> initSpiderProgShader();
+    shared_ptr<Program> initEyeProgShader();
+    shared_ptr<Program> initPupilProgShader();
     
     shared_ptr<Program> getCurrentShader() { return currentShader; }
     void setCurrentShader(int shader) { currentShader = shaderMap[shader]; }

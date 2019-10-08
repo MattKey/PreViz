@@ -25,6 +25,10 @@
 
 void ShaderManager::initShaders() {
     shaderMap[SIMPLEPROG] = initSimpleProgShader();
+    shaderMap[SPIDERPROG] = initSpiderProgShader();
+    shaderMap[HANDPROG] = initHandProgShader();
+    shaderMap[EYEPROG] = initEyeProgShader();
+    shaderMap[PUPILPROG] = initPupilProgShader();
 }
 
 shared_ptr<Program> ShaderManager::initSimpleProgShader() {
@@ -32,7 +36,7 @@ shared_ptr<Program> ShaderManager::initSimpleProgShader() {
     std::shared_ptr<Program> prog = make_shared<Program>();
     
     prog->setVerbose(true);
-    prog->setShaderNames(resourceDirectory + "/shaders/simple_vert.glsl", resourceDirectory + "/shaders/simple_frag.glsl");
+    prog->setShaderNames(resourceDirectory + "/shaders/hand_vert.glsl", resourceDirectory + "/shaders/hand_frag.glsl");
     
     if (!prog->init())
     {
@@ -45,6 +49,99 @@ shared_ptr<Program> ShaderManager::initSimpleProgShader() {
     prog->addUniform("M");
     prog->addAttribute("vertPos");
     prog->addAttribute("vertNor");
+    prog->addAttribute("vertTex");
+    
+    return prog;
+}
+
+shared_ptr<Program> ShaderManager::initSpiderProgShader() {
+//    // Initialize the GLSL program.
+    std::shared_ptr<Program> prog = make_shared<Program>();
+    
+    prog->setVerbose(true);
+    prog->setShaderNames(resourceDirectory + "/shaders/spider_vert.glsl", resourceDirectory + "/shaders/spider_frag.glsl");
+    
+    if (!prog->init())
+    {
+        cerr << "One or more shaders failed to compile... exiting!" << endl;
+        exit(1);
+    }
+    
+    prog->addUniform("P");
+    prog->addUniform("V");
+    prog->addUniform("M");
+    prog->addAttribute("vertPos");
+    prog->addAttribute("vertNor");
+    prog->addAttribute("vertTex");
+    
+    return prog;
+}
+
+shared_ptr<Program> ShaderManager::initPupilProgShader() {
+//    // Initialize the GLSL program.
+    std::shared_ptr<Program> prog = make_shared<Program>();
+    
+    prog->setVerbose(true);
+    prog->setShaderNames(resourceDirectory + "/shaders/pupil_vert.glsl", resourceDirectory + "/shaders/pupil_frag.glsl");
+    
+    if (!prog->init())
+    {
+        cerr << "One or more shaders failed to compile... exiting!" << endl;
+        exit(1);
+    }
+    
+    prog->addUniform("P");
+    prog->addUniform("V");
+    prog->addUniform("M");
+    prog->addAttribute("vertPos");
+    prog->addAttribute("vertNor");
+    prog->addAttribute("vertTex");
+    
+    return prog;
+}
+
+shared_ptr<Program> ShaderManager::initEyeProgShader() {
+//    // Initialize the GLSL program.
+    std::shared_ptr<Program> prog = make_shared<Program>();
+    
+    prog->setVerbose(true);
+    prog->setShaderNames(resourceDirectory + "/shaders/eye_vert.glsl", resourceDirectory + "/shaders/eye_frag.glsl");
+    
+    if (!prog->init())
+    {
+        cerr << "One or more shaders failed to compile... exiting!" << endl;
+        exit(1);
+    }
+    
+    prog->addUniform("P");
+    prog->addUniform("V");
+    prog->addUniform("M");
+    prog->addAttribute("vertPos");
+    prog->addAttribute("vertNor");
+    prog->addAttribute("vertTex");
+    
+    return prog;
+}
+
+shared_ptr<Program> ShaderManager::initHandProgShader() {
+//    // Initialize the GLSL program.
+    std::shared_ptr<Program> prog = make_shared<Program>();
+    
+    prog->setVerbose(true);
+    prog->setShaderNames(resourceDirectory + "/shaders/hand_vert.glsl", resourceDirectory + "/shaders/hand_frag.glsl");
+    
+    if (!prog->init())
+    {
+        cerr << "One or more shaders failed to compile... exiting!" << endl;
+        exit(1);
+    }
+    
+    prog->addUniform("P");
+    prog->addUniform("V");
+    prog->addUniform("M");
+    prog->addAttribute("vertPos");
+    prog->addAttribute("vertNor");
+    prog->addAttribute("vertTex");
     
     return prog;
 }
